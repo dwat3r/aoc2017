@@ -1,6 +1,7 @@
 import Data.List
 import Data.Function (on)
 import qualified Data.Map as M
+import Debug.Trace
 
 s = [("keztg",7,[]),
      ("uwbtawx",9,[]),
@@ -1459,18 +1460,26 @@ s = [("keztg",7,[]),
 part1 = head $ foldl (\acc (_,_,cs) -> acc \\ cs) children s
   where children = map (\(n,_,cs) -> n) s
 
-part2 :: Either String Int
-part2 = go part1 nodes
+part2 :: Int
+part2 = fst $ go nodes part1
   where 
     nodes = foldl (\acc (x,w,cs) -> M.insert x (w,cs) acc) M.empty s
+    go::M.Map String (Int,[String]) -> String -> (Int, Either Int Int)
     go nodes node = case node `M.lookup` nodes of
-      Just (w, []) -> Right w
-      Just (w, cs) -> case cw of
-        [(w1,c1),(w2,c2)]  -> 
-        False -> Left $ c - c2
-        []  -> Right $ w + sum $ map fromRight css
       Nothing -> undefined
+      Just (w, []) -> (w, Right w)
+      Just (w, cs) -> case cw of
+        [(Right w1,wa1),(Right w2,wa2)] -> (w, Left $ wa2 - abs (w1 - w2))
+        [(Left w1,_),_]  -> (w1, Left w1)
+        [_]           -> (w, Right $ w + sum (map (fromRight . snd) css))
+        _              -> error $ show cw
         where
-          cw = M.assocs $ foldl (\acc x -> insertWith (+) x 1 acc) M.empty css
+          cw = M.assocs $ foldl (\acc (xw, x) -> M.insertWith const x xw acc) M.empty css
           css = map (go nodes) cs
+
+fromRight::Either Int Int -> Int
+fromRight (Left _)  = undefined
+fromRight (Right x) = x
+
+
 
