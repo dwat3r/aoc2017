@@ -14,28 +14,29 @@ newSTUArray = newListArray
 
 part1 = runST $ do
     list <- newSTUArray (0, 255) [0..255]
-    go 0 0 0 s list
+    go 0 0 s list
 
-go lp p ss lens list = do 
+go lp p lens list = do
+    debug <- getElems list
+    traceShowM (lp,p)
     if lp > 15 then do
         a <- readArray list 0
         b <- readArray list 1
         return $ a * b
     else do
-        debug <- getElems list
-        traceShowM debug
         let ll = lens V.! lp
-        guard (ll > 1) $ revSubList list p ((p + ll) `mod` 256) (p < (p + ll) `mod` 256)
-        pv <- readArray list p
-        go (lp + 1) ((p + pv + ss) `mod` 256) (ss + 1) lens list
+        revSubList list p ((p + ll - 1) `mod` 256) (p < (p + ll - 1) `mod` 256)
+        go (lp + 1) ((p + ll + lp) `mod` 256) lens list
 
 
-revSubList list a b lt = do
-    av <- readArray list a
-    bv <- readArray list b
-    writeArray list a bv
-    writeArray list b av
+revSubList list a b lt =
     if (lt && (b - a) <= 2) || (not lt && (a - b) <= 2) then return list
-    else revSubList list ((a+1) `mod` 256) (if b == 0 then 255 else b-1) lt
+    else do    
+        av <- readArray list a
+        bv <- readArray list b
+        writeArray list a bv
+        writeArray list b av
+        revSubList list ((a+1) `mod` 256) (if b == 0 then 255 else b-1) lt
+    
   
 main = print part1
