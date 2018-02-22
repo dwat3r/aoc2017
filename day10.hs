@@ -7,26 +7,29 @@ import qualified Data.Vector as V
 import Debug.Trace
 import Control.Monad
 
-s = V.fromList [14,58,0,116,179,16,1,104,2,254,167,86,255,55,122,244]
+--s = V.fromList [14,58,0,116,179,16,1,104,2,254,167,86,255,55,122,244]
+s = V.fromList [3,4,1,5]
+asize = 5
 
 newSTUArray :: (Int, Int) -> [Int] -> ST o (STUArray o Int Int)
 newSTUArray = newListArray
 
 part1 = runST $ do
-    list <- newSTUArray (0, 255) [0..255]
+    --list <- newSTUArray (0, 255) [0..255]
+    list <- newSTUArray (0, 4) [0..4]
     go 0 0 s list
 
 go lp p lens list = do
     debug <- getElems list
-    traceShowM (lp,p)
-    if lp > 15 then do
+    traceShowM (lp,p,debug)
+    if lp == length lens then do
         a <- readArray list 0
         b <- readArray list 1
         return $ a * b
     else do
         let ll = lens V.! lp
-        revSubList list p ((p + ll - 1) `mod` 256) (p < (p + ll - 1) `mod` 256)
-        go (lp + 1) ((p + ll + lp) `mod` 256) lens list
+        revSubList list p ((p + ll - 1) `mod` asize) (p < (p + ll - 1) `mod` asize)
+        go (lp + 1) ((p + ll + lp) `mod` asize) lens list
 
 
 revSubList list a b lt =
@@ -36,7 +39,7 @@ revSubList list a b lt =
         bv <- readArray list b
         writeArray list a bv
         writeArray list b av
-        revSubList list ((a+1) `mod` 256) (if b == 0 then 255 else b-1) lt
+        revSubList list ((a+1) `mod` asize) (if b == 0 then asize - 1 else b-1) lt
     
   
 main = print part1
